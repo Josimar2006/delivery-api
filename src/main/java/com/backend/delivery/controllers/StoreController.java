@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.delivery.DTO.CreateStoreDto;
+import com.backend.delivery.models.Product;
 import com.backend.delivery.models.Store;
 import com.backend.delivery.services.StoreService;
 import com.backend.delivery.utils.File;
@@ -40,8 +41,8 @@ public class StoreController {
  
     @GetMapping
     public ResponseEntity<Page<Store>> all(
-        @RequestParam(defaultValue = "0") int pageNumber,
-        @RequestParam(defaultValue = "3") int pageSize
+        @RequestParam(defaultValue = "0", name = "skip") int pageNumber,
+        @RequestParam(defaultValue = "3", name = "size") int pageSize
     ) {
 
         log.info("select stores");
@@ -73,6 +74,7 @@ public class StoreController {
 
     @GetMapping("{id}")
     public ResponseEntity<Resource> donwload(@PathVariable Long id, HttpServletRequest request) throws IOException {
+        log.info("mostrar imagem da loja");
         File file = storeService.donwload(id, request);
 
         return ResponseEntity.ok()
@@ -80,4 +82,17 @@ public class StoreController {
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""+file.getResource().getFilename()+"\"")
             .body(file.getResource());
     }
+
+    
+    @GetMapping("/products/{id}")
+    public ResponseEntity<Page<Product>> findProducts(
+        @PathVariable("id") long store_id,
+        @RequestParam(defaultValue = "0", name = "skip") int pageNumber,
+        @RequestParam(defaultValue = "3", name = "size") int pageSize
+    ) {
+        log.info("Selecionar todos os produtos de uma loja");
+
+        return ResponseEntity.ok().body(storeService.findProductsByStore(store_id, pageNumber, pageSize));
+    }
+    
 }

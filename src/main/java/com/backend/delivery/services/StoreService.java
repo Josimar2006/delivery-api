@@ -2,27 +2,29 @@ package com.backend.delivery.services;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+
 import com.backend.delivery.DTO.CreateStoreDto;
+import com.backend.delivery.models.Product;
 import com.backend.delivery.models.Store;
+import com.backend.delivery.repositories.ProductRepository;
 import com.backend.delivery.repositories.StoreRepository;
 import com.backend.delivery.utils.File;
 
 @Service
+@RequiredArgsConstructor
 public class StoreService {
     
-    @Autowired
-    StoreRepository storeRepository;
-
-    @Autowired
-    FileService fileService;
+    final StoreRepository storeRepository;
+    final FileService fileService;
+    final ProductRepository productRepository;
 
     public Store save(CreateStoreDto data) {
         String filename = fileService.upload(data.store_image());
@@ -71,5 +73,15 @@ public class StoreService {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
         return storeRepository.findAll(pageable);
+    }
+
+    @Transactional
+    public Page<Product> findProductsByStore(long store_id, int pageNumber, int pageSize) {
+        Store store = storeRepository.findById(store_id)
+            .orElseThrow(() -> new RuntimeException("Store Not found"));
+            
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        return productRepository.findAllByStore(store, pageable);
     }
 }
